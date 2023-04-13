@@ -176,22 +176,12 @@ class Api:
         return script, script_idx
 
     def text2imgapi(self, txt2imgreq: StableDiffusionTxt2ImgProcessingAPI):
-        # 添加task_id
-        # print(txt2imgreq.task_id)
-        task_id = None
-        if txt2imgreq.script_args is not None and len(txt2imgreq.script_args) > 0 :
-            task_id = txt2imgreq.script_args[0]
-            txt2imgreq.script_args.pop(0)
-            print(task_id)
-
         script, script_idx = self.get_script(txt2imgreq.script_name, scripts.scripts_txt2img)
 
         populate = txt2imgreq.copy(update={ # Override __init__ params
             "sampler_name": validate_sampler_name(txt2imgreq.sampler_name or txt2imgreq.sampler_index),
-            # "do_not_save_samples": True,
-            "do_not_save_samples": False,
-            # "do_not_save_grid": True
-            "do_not_save_grid": False
+            "do_not_save_samples": True,
+            "do_not_save_grid": True
             }
         )
         if populate.sampler_name:
@@ -210,12 +200,6 @@ class Api:
                 p.script_args = [script_idx + 1] + [None] * (script.args_from - 1) + p.script_args
                 processed = scripts.scripts_txt2img.run(p, *p.script_args)
             else:
-                p.outpath_grids = opts.outdir_txt2img_grids
-                p.outpath_samples = opts.outdir_txt2img_samples
-                if task_id is not None:
-                    p.forced_filename = task_id
-                else:
-                    p.forced_filename = None
                 processed = process_images(p)
             shared.state.end()
 
