@@ -661,6 +661,9 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
                     x_sample = modules.face_restoration.restore_faces(x_sample)
                     devices.torch_gc()
 
+                # 判断图像是否为全黑,如果全黑，存储为强制文件名“nsfwZero.png”
+                nsfwZero = np.all(x_sample == 0)  # 判断图像是否为全黑
+
                 image = Image.fromarray(x_sample)
 
                 if p.scripts is not None:
@@ -676,8 +679,14 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
                 image = apply_overlay(image, p.paste_to, i, p.overlay_images)
 
+                # 判断图像是否为全黑,如果全黑，存储为强制文件名“nsfwZero.png”
+                str_forced_filename = None
+                if nsfwZero == True: # 如果触发了nsfwZero，输出文件名为nsfwZero
+                    str_forced_filename = "nsfwZero"
+
                 if opts.samples_save and not p.do_not_save_samples:
-                    images.save_image(image, p.outpath_samples, "", seeds[i], prompts[i], opts.samples_format, info=infotext(n, i), p=p)
+                    images.save_image(image, p.outpath_samples, "", seeds[i], prompts[i], opts.samples_format,
+                                      info=infotext(n, i), p=p,forced_filename=str_forced_filename)
 
                 text = infotext(n, i)
                 infotexts.append(text)
